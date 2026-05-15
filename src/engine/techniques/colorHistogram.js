@@ -29,17 +29,20 @@ export function performColorHistogramAnalysis(imageData, width, height) {
   const sampleSize = Math.min(pixelCount, 50000);
   const step = Math.max(1, Math.floor(pixelCount / sampleSize));
   
+  let colorSampleCount = 0;
   for (let i = 0; i < data.length; i += 4 * step) {
     const color = `${data[i]},${data[i+1]},${data[i+2]}`;
     uniqueColors.add(color);
+    colorSampleCount++;
   }
   
-  const colorDiversity = uniqueColors.size / sampleSize;
+  const colorDiversity = uniqueColors.size / colorSampleCount;
   
   // Analyze saturation distribution
   let totalSat = 0;
   let highSatCount = 0;
   let veryLowSatCount = 0;
+  let sampledPixels = 0;
   
   for (let i = 0; i < data.length; i += 4 * step) {
     const r = data[i] / 255;
@@ -51,44 +54,59 @@ export function performColorHistogramAnalysis(imageData, width, height) {
     totalSat += sat;
     if (sat > 0.8) highSatCount++;
     if (sat < 0.05) veryLowSatCount++;
+    sampledPixels++;
   }
   
-  const avgSat = totalSat / (pixelCount / step);
-  const highSatRatio = highSatCount / (pixelCount / step);
-  const lowSatRatio = veryLowSatCount / (pixelCount / step);
+  const avgSat = totalSat / sampledPixels;
+  const highSatRatio = highSatCount / sampledPixels;
+  const lowSatRatio = veryLowSatCount / sampledPixels;
   
   // Scoring
   let score = 0;
-  
+
   // Histogram gap analysis (AI images often have smoother histograms)
   const avgGaps = (rAnalysis.gaps + gAnalysis.gaps + bAnalysis.gaps) / 3;
-  if (avgGaps < 3) score += 20; // Very few gaps = suspiciously smooth
+  if (avgGaps < 3) score += 20;       // Very few gaps = suspiciously smooth
   else if (avgGaps < 8) score += 10;
-  
-  // Histogram smoothness (AI images tend to have smoother distributions)
+
+  // Histogram smoothness (primary AI indicator — real cameras produce irregular histograms)
   const avgSmoothness = (rAnalysis.smoothness + gAnalysis.smoothness + bAnalysis.smoothness) / 3;
-  if (avgSmoothness > 0.95) score += 25;
-  else if (avgSmoothness > 0.9) score += 15;
+  if (avgSmoothness > 0.95) score += 28;
+  else if (avgSmoothness > 0.9) score += 18;
   else if (avgSmoothness > 0.85) score += 8;
-  
+
   // Spike analysis (heavy editing creates spikes)
   const totalSpikes = rAnalysis.spikes + gAnalysis.spikes + bAnalysis.spikes;
   if (totalSpikes > 15) score += 20;
   else if (totalSpikes > 8) score += 12;
   else if (totalSpikes > 4) score += 5;
-  
+
   // Color diversity (AI images sometimes have limited palette)
   if (colorDiversity < 0.3) score += 15;
   else if (colorDiversity < 0.5) score += 8;
-  
-  // Unnatural saturation
-  if (highSatRatio > 0.4) score += 10; // Over-saturated
-  if (avgSat > 0.6) score += 5;
-  
+
+  // High saturation is only suspicious when ALSO paired with smooth histograms.
+  // Real sports/nature photos are saturated but have irregular histograms (camera sensor noise).
+  // AI-generated images are saturated AND have smooth histograms.
+  const histogramSuspicious = avgSmoothness > 0.88 || avgGaps < 6;
+  if (histogramSuspicious) {
+    if (highSatRatio > 0.3) score += 15;
+    else if (highSatRatio > 0.15) score += 8;
+    if (avgSat > 0.5) score += 10;
+    else if (avgSat > 0.4) score += 5;
+  }
+  if (lowSatRatio > 0.8 && colorDiversity < 0.2) score += 8;
+
+  // AI-art palette: vivid + limited palette + SMOOTH histograms (all three required)
+  // Real jerseys/nature are vivid but do NOT have smooth histograms.
+  const isAIArtPalette = avgSat > 0.45 && highSatRatio > 0.25 &&
+                         colorDiversity < 0.65 && avgSmoothness > 0.9;
+  if (isAIArtPalette) score += 18;
+
   score = Math.min(100, score);
   const confidence = Math.min(1, 0.4 + Math.abs(avgSmoothness - 0.7) / 0.5);
   
-  let details = '';
+  let details;
   if (score >= 60) {
     details = `Color distribution is highly unusual. Histogram smoothness: ${(avgSmoothness * 100).toFixed(0)}%, gaps: ${avgGaps.toFixed(0)}, spikes: ${totalSpikes}. Suggests synthetic generation or heavy editing.`;
   } else if (score >= 30) {
@@ -102,7 +120,7 @@ export function performColorHistogramAnalysis(imageData, width, height) {
     confidence,
     details,
     histograms: { r: Array.from(histR), g: Array.from(histG), b: Array.from(histB) },
-    stats: { avgSmoothness: avgSmoothness.toFixed(3), avgGaps, totalSpikes, colorDiversity: colorDiversity.toFixed(3) }
+    stats: { avgSmoothness: avgSmoothness.toFixed(3), avgGaps, totalSpikes, colorDiversity: colorDiversity.toFixed(3), lowSatRatio: lowSatRatio.toFixed(3) }
   };
 }
 

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 
 const SEED_REPORTS = [
   { id: 1, title: 'Fake earthquake image circulating on WhatsApp', desc: 'AI-generated image of destroyed buildings shared as "Chennai earthquake". No earthquake occurred.', votes: 47, source: 'WhatsApp', date: '2026-03-20' },
@@ -8,14 +8,9 @@ const SEED_REPORTS = [
 ]
 
 export default function CommunityPage() {
-  const [reports, setReports] = useState([])
+  const [reports, setReports] = useState(loadReports)
   const [showForm, setShowForm] = useState(false)
   const [newReport, setNewReport] = useState({ title: '', desc: '', source: '' })
-
-  useEffect(() => {
-    const saved = localStorage.getItem('realitycheck_ai_reports')
-    setReports(saved ? JSON.parse(saved) : SEED_REPORTS)
-  }, [])
 
   const saveReports = (r) => { setReports(r); localStorage.setItem('realitycheck_ai_reports', JSON.stringify(r)) }
 
@@ -60,7 +55,7 @@ export default function CommunityPage() {
         )}
 
         <div className="report-feed">
-          {reports.sort((a, b) => b.votes - a.votes).map(r => (
+          {[...reports].sort((a, b) => b.votes - a.votes).map(r => (
             <div key={r.id} className="card report-card">
               <div className="report-body" style={{ flex: 1 }}>
                 <div className="report-title">{r.title}</div>
@@ -80,4 +75,14 @@ export default function CommunityPage() {
       </div>
     </div>
   )
+}
+
+function loadReports() {
+  try {
+    const saved = localStorage.getItem('realitycheck_ai_reports')
+    const parsed = saved ? JSON.parse(saved) : null
+    return Array.isArray(parsed) ? parsed : SEED_REPORTS
+  } catch {
+    return SEED_REPORTS
+  }
 }

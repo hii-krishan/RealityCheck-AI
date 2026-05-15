@@ -19,13 +19,14 @@ export const complaintSteps = [
 
 export const stateHelplines = [
   { state: "Delhi", phone: "011-26888888", email: "cybercell-dl@nic.in", address: "Cyber Crime Cell, Mandir Marg, New Delhi" },
-  { state: "Maharashtra", phone: "022-22641261", email: "cybercell.mumbai@mahapolice.gov.in", address: "BKC Cyber Station, Mumbai" },
-  { state: "Karnataka", phone: "080-22942475", email: "cyberps@ksp.gov.in", address: "CID Office, Carlton House, Bangalore" },
-  { state: "Tamil Nadu", phone: "044-28512527", email: "ccps@tn.gov.in", address: "CCPS, Mylapore, Chennai" },
-  { state: "Uttar Pradesh", phone: "0522-2620006", email: "sp-cybercrime@up.gov.in", address: "Cyber Crime Station, Lucknow" },
   { state: "Gujarat", phone: "079-25638581", email: "cyber.crime@gujaratpolice.gov.in", address: "Cyber Crime Cell, Gandhinagar" },
-  { state: "Rajasthan", phone: "0141-2822843", email: "igcybercrime@rajpolice.gov.in", address: "SOG Building, Jaipur" },
-  { state: "West Bengal", phone: "033-22143000", email: "cybercrimecid@wbpolice.gov.in", address: "Bhawani Bhawan, Kolkata" },
-  { state: "Telangana", phone: "040-27852040", email: "cybercrimes@tspolice.gov.in", address: "Cyber Crimes PS, Hyderabad" },
+  { state: "Haryana", phone: "0172-2749673", email: "cybercrime@haryanapolice.gov.in", address: "Cyber Crime Cell, Police Headquarters, Sector-6, Panchkula" },
+  { state: "Karnataka", phone: "080-22942475", email: "cyberps@ksp.gov.in", address: "CID Office, Carlton House, Bangalore" },
   { state: "Kerala", phone: "0471-2721547", email: "cyberdome@keralapolice.gov.in", address: "Technopark, Trivandrum" },
+  { state: "Maharashtra", phone: "022-22641261", email: "cybercell.mumbai@mahapolice.gov.in", address: "BKC Cyber Station, Mumbai" },
+  { state: "Rajasthan", phone: "0141-2822843", email: "igcybercrime@rajpolice.gov.in", address: "SOG Building, Jaipur" },
+  { state: "Tamil Nadu", phone: "044-28512527", email: "ccps@tn.gov.in", address: "CCPS, Mylapore, Chennai" },
+  { state: "Telangana", phone: "040-27852040", email: "cybercrimes@tspolice.gov.in", address: "Cyber Crimes PS, Hyderabad" },
+  { state: "Uttar Pradesh", phone: "0522-2620006", email: "sp-cybercrime@up.gov.in", address: "Cyber Crime Station, Lucknow" },
+  { state: "West Bengal", phone: "033-22143000", email: "cybercrimecid@wbpolice.gov.in", address: "Bhawani Bhawan, Kolkata" },
 ];

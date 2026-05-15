@@ -15,7 +15,6 @@ export default function Footer() {
             <li><Link to="/scam-detector">Scam Detector</Link></li>
             <li><Link to="/link-checker">Link Checker</Link></li>
             <li><Link to="/qr-scanner">QR Scanner</Link></li>
-            <li><Link to="/reverse-search">Reverse Search</Link></li>
           </ul>
         </div>
         <div className="footer-col">
@@ -23,7 +22,6 @@ export default function Footer() {
           <ul>
             <li><Link to="/articles">Articles</Link></li>
             <li><Link to="/tips">Safety Tips</Link></li>
-            <li><Link to="/quiz">Deepfake Quiz</Link></li>
             <li><Link to="/footprint">Footprint Check</Link></li>
           </ul>
         </div>

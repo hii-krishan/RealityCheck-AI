@@ -10,8 +10,6 @@ import ScamDetectorPage from './pages/ScamDetectorPage'
 import LinkCheckerPage from './pages/LinkCheckerPage'
 import QRScannerPage from './pages/QRScannerPage'
 import TipsPage from './pages/TipsPage'
-import ReverseSearchPage from './pages/ReverseSearchPage'
-import QuizPage from './pages/QuizPage'
 import CommunityPage from './pages/CommunityPage'
 import FootprintPage from './pages/FootprintPage'
 
@@ -30,8 +28,6 @@ export default function App() {
           <Route path="/link-checker" element={<LinkCheckerPage />} />
           <Route path="/qr-scanner" element={<QRScannerPage />} />
           <Route path="/tips" element={<TipsPage />} />
-          <Route path="/reverse-search" element={<ReverseSearchPage />} />
-          <Route path="/quiz" element={<QuizPage />} />
           <Route path="/community" element={<CommunityPage />} />
           <Route path="/footprint" element={<FootprintPage />} />
         </Routes>

@@ -123,7 +123,7 @@ export function checkLink(url) {
       parsedUrl: { protocol: parsed.protocol, hostname, pathname: parsed.pathname, fullUrl: normalizedUrl },
       score: Math.min(100, Math.max(0, totalWeight * 12))
     };
-  } catch (e) {
+  } catch {
     return { risk: 'INVALID URL', riskClass: 'dangerous', flags: [{ flag: 'Could not parse URL — invalid format', weight: 5, type: 'danger' }], score: 50 };
   }
 }

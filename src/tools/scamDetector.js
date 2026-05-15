@@ -65,12 +65,12 @@ export function analyzeMessage(text) {
   else if (totalWeight >= 2) { risk = 'SLIGHTLY SUSPICIOUS'; riskClass = 'suspicious'; }
   else { risk = 'APPEARS SAFE'; riskClass = 'safe'; }
   
-  const advice = getAdvice(riskClass, flags);
+  const advice = getAdvice(riskClass);
   
   return { risk, riskClass, flags, totalWeight, urls, advice, score: Math.min(100, totalWeight * 10) };
 }
 
-function getAdvice(riskClass, flags) {
+function getAdvice(riskClass) {
   if (riskClass === 'dangerous') {
     return 'DO NOT click any links, share any information, or respond to this message. Block the sender and report to cybercrime.gov.in or call 1930.';
   } else if (riskClass === 'suspicious') {

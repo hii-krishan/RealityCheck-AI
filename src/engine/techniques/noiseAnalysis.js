@@ -6,6 +6,9 @@
 
 export function performNoiseAnalysis(imageData, width, height) {
   const data = imageData.data;
+  if (width < 5 || height < 5) {
+    return createInsufficientNoiseResult(width, height);
+  }
   
   // Convert to grayscale
   const gray = new Float32Array(width * height);
@@ -89,15 +92,22 @@ export function performNoiseAnalysis(imageData, width, height) {
   const varVar = blockNoiseVars.reduce((a, b) => a + (b - varMean) ** 2, 0) / blockNoiseVars.length;
   const varCV = varMean > 0 ? Math.sqrt(varVar) / varMean : 0; // Coefficient of variation
   
-  // Create noise visualization
+  // Create noise visualization with amplified contrast
+  // Instead of normalizing by noiseMax (which can be tiny and wash out),
+  // use a fixed amplification factor so differences are clearly visible.
   const noiseVis = new Uint8ClampedArray(width * height * 4);
-  const noiseMax = Math.max(...noise.map(Math.abs));
+  const AMPLIFY = 8; // multiply residual so ±3 noise maps to full 0–255 range
   for (let i = 0; i < width * height; i++) {
-    const normalized = ((noise[i] / (noiseMax || 1)) + 1) * 127.5;
-    const val = Math.min(255, Math.max(0, normalized));
-    noiseVis[i * 4] = val;
-    noiseVis[i * 4 + 1] = val;
-    noiseVis[i * 4 + 2] = val;
+    // Map noise from [-AMPLIFY*noiseStdDev .. +AMPLIFY*noiseStdDev] → 0..255
+    // Centre (zero noise) → 128 (mid-grey)
+    const amplified = noise[i] * AMPLIFY;
+    const val = Math.min(255, Math.max(0, 128 + amplified));
+    // Tint: high noise (bright) = warm red-orange, low noise = cool blue
+    const warm = val > 128 ? val : 128;
+    const cool = val < 128 ? 255 - val : 128;
+    noiseVis[i * 4]     = Math.min(255, warm);          // R
+    noiseVis[i * 4 + 1] = Math.min(255, Math.round(val * 0.85)); // G
+    noiseVis[i * 4 + 2] = Math.min(255, cool);          // B
     noiseVis[i * 4 + 3] = 255;
   }
   
@@ -119,9 +129,13 @@ export function performNoiseAnalysis(imageData, width, height) {
   else if (varCV < 0.25 && noiseStdDev < 4) score += 10;
   
   score = Math.min(100, score);
-  const confidence = Math.min(1, 0.4 + Math.abs(noiseStdDev - 8) / 15);
+
+  // Extra boost for highly non-uniform noise — strong sign of compositing / splicing
+  if (varCV > 1.5 && noiseStdDev > 3) score = Math.min(100, score + 15);
+
+  const confidence = Math.min(1, 0.45 + Math.abs(noiseStdDev - 8) / 14);
   
-  let details = '';
+  let details;
   if (score >= 60) {
     details = `Noise pattern is highly irregular (σ=${noiseStdDev.toFixed(2)}, CV=${varCV.toFixed(2)}). The noise distribution suggests AI generation or heavy manipulation.`;
   } else if (score >= 30) {
@@ -137,4 +151,22 @@ export function performNoiseAnalysis(imageData, width, height) {
     noiseMapData: new ImageData(noiseVis, width, height),
     stats: { noiseStdDev: noiseStdDev.toFixed(3), noiseCV: varCV.toFixed(3), blockCount: blockNoiseVars.length }
   };
+}
+
+function createInsufficientNoiseResult(width, height) {
+  return {
+    score: 0,
+    confidence: 0,
+    details: 'Image is too small for reliable noise-pattern analysis.',
+    noiseMapData: new ImageData(createBlankRgba(width, height), width, height),
+    stats: { noiseStdDev: '0.000', noiseCV: '0.000', blockCount: 0 }
+  };
+}
+
+function createBlankRgba(width, height) {
+  const rgba = new Uint8ClampedArray(width * height * 4);
+  for (let i = 3; i < rgba.length; i += 4) {
+    rgba[i] = 255;
+  }
+  return rgba;
 }

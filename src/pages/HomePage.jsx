@@ -11,14 +11,16 @@ const FEATURES = [
   { icon: '🚨', title: 'Cyber Helpline', desc: 'Find cyber crime helpline numbers, file complaints, and get emergency help', to: '/helpline' },
   { icon: '🗺️', title: 'Police Station Map', desc: 'Find nearby cyber police stations on an interactive map with directions', to: '/map' },
   { icon: '💡', title: 'Safety Tips', desc: '30+ daily digital safety tips for social media, banking, passwords, and more', to: '/tips' },
-  { icon: '🔎', title: 'Reverse Image Search', desc: 'Search an image across Google, TinEye, and Yandex to find its original source', to: '/reverse-search' },
   { icon: '🧠', title: 'Deepfake Quiz', desc: 'Test your ability to spot AI-generated images in an interactive quiz', to: '/quiz' },
   { icon: '🛡️', title: 'Community Reports', desc: 'Report and vote on suspicious images. See trending misinformation alerts', to: '/community' },
   { icon: '🔐', title: 'Digital Footprint', desc: 'Check how vulnerable your online presence is with our privacy assessment', to: '/footprint' },
 ]
 
+const DAY_MS = 86400000
+const TODAY_TIP_INDEX = Math.floor(Date.now() / DAY_MS)
+
 export default function HomePage() {
-  const dailyTip = safetyTips[Math.floor(Date.now() / 86400000) % safetyTips.length]
+  const dailyTip = safetyTips[TODAY_TIP_INDEX % safetyTips.length]
   
   return (
     <>

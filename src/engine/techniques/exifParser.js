@@ -28,6 +28,9 @@ export function performEXIFAnalysis(file) {
 function parseEXIF(buffer) {
   const view = new DataView(buffer);
   const tags = {};
+  if (view.byteLength < 4) {
+    return { hasEXIF: false, tags, format: 'unknown' };
+  }
   
   // Check for JPEG SOI marker
   if (view.getUint16(0) !== 0xFFD8) {
@@ -146,7 +149,7 @@ function readIFD(view, tiffStart, ifdStart, littleEndian, tags) {
         if (tagId === 0x8825) tags._hasGPS = true;
       }
     }
-  } catch (e) {
+  } catch {
     // Silently fail on malformed EXIF
   }
 }
@@ -156,22 +159,27 @@ function analyzeEXIF(exif) {
   const findings = [];
   
   if (!exif.hasEXIF) {
-    score += 40;
-    findings.push('No EXIF metadata found — AI-generated images typically lack EXIF data');
+    if (exif.format === 'jpeg') {
+      score += 5;
+      findings.push('No EXIF metadata found (common for social media photos)');
+    } else {
+      score += 3;
+      findings.push('No EXIF metadata found');
+    }
   } else {
     const tags = exif.tags;
     
     // Check for camera info
     if (!tags.Make && !tags.Model) {
-      score += 25;
-      findings.push('No camera make/model — suspicious');
+      score += 10;
+      findings.push('No camera make/model info');
     } else {
       findings.push(`Camera: ${tags.Make || 'Unknown'} ${tags.Model || ''}`);
     }
     
     // Check for timestamps
     if (!tags.DateTime && !tags.DateTimeOriginal) {
-      score += 10;
+      score += 5;
       findings.push('No timestamp data');
     } else {
       findings.push(`Date: ${tags.DateTimeOriginal || tags.DateTime}`);
@@ -180,15 +188,15 @@ function analyzeEXIF(exif) {
     // Check for software tags (editing software)
     if (tags.Software) {
       const sw = tags.Software.toLowerCase();
-      const editingSoftware = ['photoshop', 'gimp', 'lightroom', 'canva', 'pixlr', 'snapseed', 'afterlight'];
       const aiSoftware = ['midjourney', 'dall-e', 'stable diffusion', 'comfyui', 'automatic1111', 'novelai'];
+      const editingSoftware = ['photoshop', 'gimp', 'lightroom', 'canva', 'pixlr', 'snapseed', 'afterlight'];
       
       if (aiSoftware.some(s => sw.includes(s))) {
-        score += 50;
-        findings.push(`AI generation software detected: ${tags.Software}`);
+        score += 60;
+        findings.push(`AI generation software DETECTED: ${tags.Software}`);
       } else if (editingSoftware.some(s => sw.includes(s))) {
-        score += 15;
-        findings.push(`Editing software detected: ${tags.Software}`);
+        score += 8;
+        findings.push(`Editing software: ${tags.Software}`);
       } else {
         findings.push(`Software: ${tags.Software}`);
       }
@@ -196,19 +204,20 @@ function analyzeEXIF(exif) {
     
     // GPS data
     if (tags._hasGPS) {
-      score -= 10; // GPS data makes it more likely real
-      findings.push('GPS location data present (indicates real camera)');
+      score -= 8;
+      findings.push('GPS location data present');
     }
     
     // Lens info
     if (tags.LensModel || tags.LensMake) {
-      score -= 5;
+      score -= 3;
       findings.push(`Lens: ${tags.LensMake || ''} ${tags.LensModel || ''}`);
     }
   }
   
   score = Math.max(0, Math.min(100, score));
-  const confidence = exif.hasEXIF ? 0.7 : 0.5;
+  // Very low confidence since EXIF is unreliable
+  const confidence = exif.hasEXIF ? 0.35 : exif.format === 'jpeg' ? 0.15 : 0.10;
   
   let details = findings.join('. ') + '.';
   

@@ -52,7 +52,12 @@ export default function ArticlesPage() {
         {filtered.map(article => (
           <a key={article.id} href={article.url} target="_blank" rel="noreferrer" className="card article-card" style={{ textDecoration: 'none', color: 'inherit' }}>
             <div className="article-thumb">
-              <img src={article.image} alt={article.title} loading="lazy" />
+              <img
+                src={article.image}
+                alt={article.title}
+                loading="lazy"
+                onError={e => { e.currentTarget.src = `https://picsum.photos/seed/${article.id}/400/250` }}
+              />
             </div>
             <div className="article-meta">
               <span className="article-category">{article.category}</span>

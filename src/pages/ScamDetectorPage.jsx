@@ -46,7 +46,7 @@ export default function ScamDetectorPage() {
 
         {/* Result */}
         {result && (
-          <div className="card mt-4" style={{ animnation: 'fadeInUp 0.4s ease' }}>
+          <div className="card mt-4" style={{ animation: 'fadeInUp 0.4s ease' }}>
             <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
               <div className={`risk-badge ${result.riskClass}`} style={{ fontSize: '1.1rem', padding: '12px 24px' }}>
                 {result.riskClass === 'dangerous' ? '🚨' : result.riskClass === 'suspicious' ? '⚠️' : '✅'} {result.risk}

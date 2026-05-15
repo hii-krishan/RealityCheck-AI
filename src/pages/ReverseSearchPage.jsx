@@ -1,23 +1,17 @@
-import { useState, useRef } from 'react'
+import { useEffect, useState, useRef } from 'react'
 
 export default function ReverseSearchPage() {
   const [preview, setPreview] = useState(null)
-  const [file, setFile] = useState(null)
   const fileRef = useRef()
 
   const handleFile = (f) => {
     if (!f) return
-    setFile(f); setPreview(URL.createObjectURL(f))
+    setPreview(URL.createObjectURL(f))
   }
 
-  const searchGoogle = () => {
-    if (!file) return
-    // Opens Google Lens with the image
-    const formData = new FormData()
-    formData.append('encoded_image', file)
-    // Fallback: open Google Images
-    window.open('https://images.google.com/', '_blank')
-  }
+  useEffect(() => () => {
+    if (preview) URL.revokeObjectURL(preview)
+  }, [preview])
 
   return (
     <div className="page-content">
@@ -79,7 +73,7 @@ export default function ReverseSearchPage() {
               </ol>
             </div>
 
-            <button className="btn btn-secondary mt-2" style={{ width: '100%' }} onClick={() => { setFile(null); setPreview(null) }}>
+            <button className="btn btn-secondary mt-2" style={{ width: '100%' }} onClick={() => setPreview(null)}>
               🔄 Try Another Image
             </button>
           </>

@@ -1,6 +1,9 @@
 import { useState } from 'react'
 import { safetyTips, TIP_CATEGORIES } from '../data/safetyTips'
 
+const DAY_MS = 86400000
+const TODAY_TIP_INDEX = Math.floor(Date.now() / DAY_MS)
+
 export default function TipsPage() {
   const [category, setCategory] = useState('All')
   const [search, setSearch] = useState('')
@@ -11,7 +14,7 @@ export default function TipsPage() {
     return matchCat && matchSearch
   })
 
-  const dailyTip = safetyTips[Math.floor(Date.now() / 86400000) % safetyTips.length]
+  const dailyTip = safetyTips[TODAY_TIP_INDEX % safetyTips.length]
 
   return (
     <div className="page-content">

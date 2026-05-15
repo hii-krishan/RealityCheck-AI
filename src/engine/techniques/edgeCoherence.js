@@ -6,6 +6,14 @@
 
 export function performEdgeCoherenceAnalysis(imageData, width, height) {
   const data = imageData.data;
+  if (width < 3 || height < 3) {
+    return {
+      score: 0,
+      confidence: 0,
+      details: 'Image is too small for reliable edge-coherence analysis.',
+      stats: { strengthCV: '0.000', densityCV: '0.000', densityMean: '0.000', avgEdge: '0.0' }
+    };
+  }
   
   // Convert to grayscale
   const gray = new Float32Array(width * height);
@@ -42,7 +50,9 @@ export function performEdgeCoherenceAnalysis(imageData, width, height) {
     }
   }
   
-  const avgEdge = totalEdge / ((width - 2) * (height - 2));
+  const analyzablePixels = (width - 2) * (height - 2);
+  const avgEdge = totalEdge / analyzablePixels;
+  const edgeDensity = edgePixelCount / analyzablePixels;
   
   // Analyze edge consistency across blocks
   const blockSize = 32;
@@ -88,10 +98,12 @@ export function performEdgeCoherenceAnalysis(imageData, width, height) {
   
   // Direction coherence analysis (gradual vs sudden edge direction changes)
   let directionChanges = 0;
+  let sampledEdgePixels = 0;
   const edgeThreshold = 30;
   for (let y = 2; y < height - 2; y += 2) {
     for (let x = 2; x < width - 2; x += 2) {
       if (edges[y * width + x] > edgeThreshold) {
+        sampledEdgePixels++;
         const dir = directions[y * width + x];
         const neighbors = [
           directions[(y-1) * width + x],
@@ -105,14 +117,16 @@ export function performEdgeCoherenceAnalysis(imageData, width, height) {
         });
         
         if (neighbors.length > 0) {
-          const avgDir = neighbors.reduce((a, b) => a + b, 0) / neighbors.length;
-          if (Math.abs(dir - avgDir) > Math.PI / 3) directionChanges++;
+          const avgSin = neighbors.reduce((sum, angle) => sum + Math.sin(angle), 0) / neighbors.length;
+          const avgCos = neighbors.reduce((sum, angle) => sum + Math.cos(angle), 0) / neighbors.length;
+          const avgDir = Math.atan2(avgSin, avgCos);
+          if (angleDistance(dir, avgDir) > Math.PI / 3) directionChanges++;
         }
       }
     }
   }
   
-  const dirChangeRatio = edgePixelCount > 0 ? directionChanges / edgePixelCount : 0;
+  const dirChangeRatio = sampledEdgePixels > 0 ? directionChanges / sampledEdgePixels : 0;
   
   // Scoring
   let score = 0;
@@ -122,9 +136,10 @@ export function performEdgeCoherenceAnalysis(imageData, width, height) {
   else if (strengthCV > 1.3) score += 15;
   else if (strengthCV > 0.8) score += 8;
   
-  // Unnaturally uniform edges (AI-generated)
-  if (densityCV < 0.2 && avgEdge < 15) score += 25;
-  else if (densityCV < 0.3 && avgEdge < 20) score += 15;
+  // Unnaturally uniform edges (AI-generated / digital art clean outlines)
+  if (densityCV < 0.25 && avgEdge < 30) score += 30;
+  else if (densityCV < 0.35 && avgEdge < 40) score += 18;
+  else if (densityCV < 0.45 && avgEdge < 50) score += 8;
   
   // Abrupt direction changes (compositing boundaries)
   if (dirChangeRatio > 0.3) score += 25;
@@ -138,7 +153,7 @@ export function performEdgeCoherenceAnalysis(imageData, width, height) {
   score = Math.min(100, score);
   const confidence = Math.min(1, 0.35 + strengthCV / 4);
   
-  let details = '';
+  let details;
   if (score >= 60) {
     details = `Edge analysis reveals significant inconsistencies. Strength CV: ${strengthCV.toFixed(2)}, density variation: ${densityCV.toFixed(2)}. Possible splicing or AI generation artifacts.`;
   } else if (score >= 30) {
@@ -151,6 +166,11 @@ export function performEdgeCoherenceAnalysis(imageData, width, height) {
     score,
     confidence,
     details,
-    stats: { strengthCV: strengthCV.toFixed(3), densityCV: densityCV.toFixed(3), densityMean: densityMean.toFixed(3), avgEdge: avgEdge.toFixed(1) }
+    stats: { strengthCV: strengthCV.toFixed(3), densityCV: densityCV.toFixed(3), densityMean: densityMean.toFixed(3), edgeDensity: edgeDensity.toFixed(3), avgEdge: avgEdge.toFixed(1) }
   };
+}
+
+function angleDistance(a, b) {
+  const diff = Math.abs(a - b) % (Math.PI * 2);
+  return diff > Math.PI ? (Math.PI * 2) - diff : diff;
 }

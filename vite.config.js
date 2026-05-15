@@ -4,4 +4,9 @@ import react from '@vitejs/plugin-react'
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react()],
+  optimizeDeps: {
+    exclude: ['@xenova/transformers'],  // dynamic WASM imports break pre-bundling
+  },
+  // NOTE: Do NOT add COOP/COEP headers here — they block Google Maps iframes
+  //       and other cross-origin resources the app depends on.
 })

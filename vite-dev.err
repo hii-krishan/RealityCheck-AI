@@ -1,0 +1,2 @@
+[2m12:33:01 pm[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m [31merror while updating dependencies:
+Error: EPERM: operation not permitted, rename 'C:\Users\Asus\OneDrive\Desktop\RealityCheck AI\node_modules\.vite\deps_temp_2d548a98' -> 'C:\Users\Asus\OneDrive\Desktop\RealityCheck AI\node_modules\.vite\deps'[39m
